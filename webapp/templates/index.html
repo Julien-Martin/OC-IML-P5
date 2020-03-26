@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>StackOverflow Tag Prediction - Julien Martin</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <div class="login">
+        <h1>Predict Stack Overflow Tag</h1>
+        <form action="{{ url_for('predict')}}" method="post">
+            <input type="text" name="question_title" placeholder="Titre" required>
+            <textarea name="question_text" placeholder="Questions" cols="30" rows="10"></textarea>
+            <button type="submit" class="btn btn-primary btn-block btn-large">
+                Predict
+            </button>
+        </form>
+        <br>
+        <br>
+        {{ prediction_tags }}
+    </div>
+</body>
+</html>
