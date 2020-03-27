@@ -47,8 +47,14 @@ def predict():
         # concat title and body
         data["document"] = data["title"] + " " + data["body"]
         data.drop(columns=["title", "body"], inplace=True)
-        X_tfidf = vectorizer.transform(data)
-        prediction = classifier.predict(X_tfidf)
+
+        # Cleaning
+
+        # Prediction
+        x_tfidf = vectorizer.transform(data["document"])
+        prediction_inv = classifier.predict(x_tfidf)
+        prediction = mlb.inverse_transform(prediction_inv)
+
         return jsonify({
             "prediction": str(prediction)
         })
