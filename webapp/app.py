@@ -26,6 +26,11 @@ with open('model/model.pkl', 'rb') as file:
 
 # Importing vectorizer
 with open('model/vectorizer.pkl', 'rb') as file:
+    vectorizer = pickle.load(file)
+
+# Importing MultiLabelBinarizer
+with open('model/mlb.pkl', 'rb') as file:
+    mlb = pickle.load(file)
 
 @app.route('/', methods=['GET', 'POST'])
 def main():
@@ -42,9 +47,8 @@ def predict():
         # concat title and body
         data["document"] = data["title"] + " " + data["body"]
         data.drop(columns=["title", "body"], inplace=True)
-        vectorizer = TfidfVectorizer(min_df=0.0, max_features=200000)
         X_tfidf = vectorizer.transform(data)
-        prediction = list(classifier.predict(X_tfidf))
+        prediction = classifier.predict(X_tfidf)
         return jsonify({
             "prediction": str(prediction)
         })
