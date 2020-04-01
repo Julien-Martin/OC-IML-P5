@@ -1,22 +1,13 @@
 from flask import Flask, render_template, request, jsonify
-import flask
-import numpy as np
-import traceback
 import pickle
 import pandas as pd
 from pandas.io.json import json_normalize
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import MultiLabelBinarizer
-import nltk
-from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 from nltk.tokenize import ToktokTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import stopwords
 from string import punctuation
 import re
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import CountVectorizer
 
 # App definition
 app = Flask(__name__, template_folder="templates")
