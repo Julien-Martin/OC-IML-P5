@@ -15,6 +15,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import stopwords
 from string import punctuation
 import re
+from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
 
 # App definition
