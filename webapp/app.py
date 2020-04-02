@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import pickle
 import pandas as pd
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 from bs4 import BeautifulSoup
 from nltk.tokenize import ToktokTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -30,40 +30,33 @@ with open('model/tag_features.pkl', 'rb') as file:
     tag_features = pickle.load(file)
 
 
-@app.route('/', methods=['GET', 'POST'])
-def main():
-    return "Stack Overflow Tag prediction by Julien Martin"
+@app.route('/', methods=['POST'])
 
-
-@app.route('/predict', methods=['POST', 'GET'])
+@app.route('/predict')
 def predict():
-    if request.method == "GET":
-        return "Prediction page"
-    if request.method == "POST":
-        json_ = request.json
-        data = json_normalize(json_)
-        # concat title and body
-        data["document"] = data["title"] + " " + data["body"]
-        data.drop(columns=["title", "body"], inplace=True)
+    json_ = request.get_json(force=True)
+    data = json_normalize(json_)
+    # concat title and body
+    data["document"] = data["title"] + " " + data["body"]
+    data.drop(columns=["title", "body"], inplace=True)
 
-        # Cleaning
-        lemma = WordNetLemmatizer()
-        token = ToktokTokenizer()
-        data["document"] = data["document"].apply(lambda x: BeautifulSoup(x, 'lxml').get_text())
-        data["document"] = data["document"].apply(lambda x: clean_contract(x))
-        data["document"] = data["document"].apply(lambda x: clean_punct(x, token))
-        data["document"] = data["document"].apply(lambda x: clean_stop_word(x, token))
-        data["document"] = data["document"].apply(lambda x: lemitize_words(x, token, lemma))
+    # Cleaning
+    lemma = WordNetLemmatizer()
+    token = ToktokTokenizer()
+    data["document"] = data["document"].apply(lambda x: BeautifulSoup(x, 'lxml').get_text())
+    data["document"] = data["document"].apply(lambda x: clean_contract(x))
+    data["document"] = data["document"].apply(lambda x: clean_punct(x, token))
+    data["document"] = data["document"].apply(lambda x: clean_stop_word(x, token))
+    data["document"] = data["document"].apply(lambda x: lemitize_words(x, token, lemma))
 
-        print(data["document"][0])
-        # Prediction
-        x_tfidf = vectorizer.transform(data["document"])
-        prediction_inv = classifier.predict(x_tfidf)
-        prediction = mlb.inverse_transform(prediction_inv)
+    # Prediction
+    x_tfidf = vectorizer.transform(data["document"])
+    prediction_inv = classifier.predict(x_tfidf)
+    prediction = mlb.inverse_transform(prediction_inv)
 
-        return jsonify({
-            "prediction": str(prediction)
-        })
+    return jsonify({
+        "prediction": str(prediction)
+    })
 
 
 def clean_contract(text):
