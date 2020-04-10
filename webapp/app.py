@@ -1,25 +1,34 @@
 from flask import Flask, render_template, request, jsonify
 import pickle
 import pandas as pd
-from pandas import json_normalize
+from pandas.io.json import json_normalize
 from bs4 import BeautifulSoup
 from nltk.tokenize import ToktokTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import stopwords
 from string import punctuation
 import re
+import numpy as np
 
 # App definition
 app = Flask(__name__, template_folder="templates")
 app.config['TESTING'] = True
 
-# Importing model
-with open('model/model.pkl', 'rb') as file:
-    classifier = pickle.load(file)
+# Importing model supervised
+with open('model/model_super.pkl', 'rb') as file:
+    classifier_super = pickle.load(file)
 
-# Importing vectorizer
-with open('model/vectorizer.pkl', 'rb') as file:
-    vectorizer = pickle.load(file)
+# Importing model unsupervised
+with open('model/model_nosup.pkl', 'rb') as file:
+    classifier_nosuper = pickle.load(file)
+
+# Importing vectorizer super
+with open('model/vectorizer_super.pkl', 'rb') as file:
+    vectorizer_super = pickle.load(file)
+
+# Importing vectorizer no_super
+with open('model/vectorizer_nosuper.pkl', 'rb') as file:
+    vectorizer_nosuper = pickle.load(file)
 
 # Importing MultiLabelBinarizer
 with open('model/mlb.pkl', 'rb') as file:
@@ -49,15 +58,26 @@ def predict():
     data["document"] = data["document"].apply(lambda x: clean_stop_word(x, token))
     data["document"] = data["document"].apply(lambda x: lemitize_words(x, token, lemma))
 
-    # Prediction
-    x_tfidf = vectorizer.transform(data["document"])
-    prediction_inv = classifier.predict(x_tfidf)
-    prediction = mlb.inverse_transform(prediction_inv)
+    # Supervised approach
+    if data["type"][0] == "supervised":
+        # Prediction
+        x_tfidf = vectorizer_super.transform(data["document"])
+        prediction_inv = classifier_super.predict(x_tfidf)
+        prediction = mlb.inverse_transform(prediction_inv)
 
-    return jsonify({
-        "prediction": str(prediction)
-    })
-
+        return jsonify({
+            "prediction": str(prediction)
+        })
+    # UnSupervised approach
+    elif data["type"][0] == "nosupervised":
+        tfidf_target = vectorizer_nosuper.transform(data["document"])
+        target_nmf_trans = classifier_nosuper.transform(tfidf_target)
+        tags_scores = np.dot(target_nmf_trans, classifier_nosuper.components_).tolist()[0]
+        dict_tags_score = dict(zip(vectorizer_nosuper.get_feature_names(), tags_scores))
+        prediction = { k: v for k, v in dict_tags_score.items() if v >= 0.1}
+        return jsonify({
+            "prediction": str(prediction)
+        })
 
 def clean_contract(text):
     text = text.lower()
